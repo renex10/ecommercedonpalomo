@@ -2,6 +2,8 @@ from django.shortcuts import render, get_object_or_404
 from .models import Product
 from category.models import Category
 from django.core.paginator import Paginator
+import random
+
 
 def store(request, category_slug=None):
     categories = None
@@ -42,3 +44,4 @@ def products_by_category(request, category_slug):
 def product_details(request, category_slug, product_slug):
     product = get_object_or_404(Product, category__slug=category_slug, slug=product_slug)
     return render(request, 'product_detail.html', {'product': product})
+

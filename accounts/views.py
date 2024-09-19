@@ -1,54 +1,47 @@
-from django.shortcuts import render, redirect  # Se agregó 'redirect' para redirigir correctamente
-from .forms import RegistrationForm  # Asegúrate de que esta importación sea correcta
+from django.shortcuts import render, redirect
+from .forms import RegistrationForm
 from .models import Account
-from django.contrib import auth  # Importar 'auth' correctamente para autenticación
-from django.contrib.auth import logout as auth_logout  # Para evitar conflicto de nombres
-from django.contrib.auth import login as auth_login  # Para usar la función de login de Django
+from django.contrib import auth
+from django.contrib.auth import logout as auth_logout, login as auth_login
 
-# Create your views here.
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            # Corregir typo en 'form.cleaned_data' en lugar de 'form_cleaned_data'
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
             phone_number = form.cleaned_data['phone_number']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             username = email.split("@")[0]
-            
-            # Crear usuario con los datos proporcionados
+
             user = Account.objects.create_user(
                 first_name=first_name, last_name=last_name, email=email, username=username, password=password
             )
-            user.phone_number = phone_number  # Asignar número de teléfono
-            user.save()  # Guardar el usuario
-            
-            # Redirigir a una página después del registro (opcional, puedes ajustar según tu flujo)
-            return redirect('login')  # Redirigir a la página de login o a donde prefieras
+            user.phone_number = phone_number
+            user.save()
+
+            return redirect('login')  # Redirige a la página de login
     else:
-        form = RegistrationForm()  # Si no es POST, se muestra el formulario vacío
-    
+        form = RegistrationForm()  # Muestra el formulario vacío
+
     return render(request, 'register.html', context={'form': form})
 
 def login(request):
     if request.method == 'POST':
-        email = request.POST.get("email")  # Se utiliza 'get' para evitar posibles errores si la clave no está
+        email = request.POST.get("email")
         password = request.POST.get("password")
         
-        user = auth.authenticate(email=email, password=password)
+        # Autenticación por email y contraseña
+        user = auth.authenticate(username=email.split("@")[0], password=password)
         
         if user is not None:
-            auth_login(request, user)  # Usar 'auth_login' en lugar de 'auth.login'
-            return redirect('home')  # Redirigir a la página de inicio o donde prefieras
+            auth_login(request, user)
+            return redirect('home')  # Redirige a la página de inicio
         else:
-            return redirect('login')  # Si no se autentica, redirigir al login
+            return redirect('login')  # Redirige al login en caso de error
     return render(request, 'login.html')
 
 def logout(request):
-    auth_logout(request)  # Usar 'auth_logout' para cerrar sesión correctamente
-    return redirect('login')  # Redirigir a la página de login después de cerrar sesión
-
-
-
+    auth_logout(request)
+    return redirect('login')  # Redirige a la página de login después de cerrar sesión
