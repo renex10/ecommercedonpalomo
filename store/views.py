@@ -3,8 +3,6 @@ from .models import Product
 from category.models import Category
 from django.core.paginator import Paginator
 
-
-
 def store(request, category_slug=None):
     categories = None
     products = None
@@ -24,21 +22,23 @@ def store(request, category_slug=None):
         'product_count': product_count,
     })
 
-    
 def pagination(request, products, products_by_page):
     paginator = Paginator(products, products_by_page)
     page = request.GET.get('page')  # Obtenemos el número de la página desde la URL
-    paged_products = paginator.get_page(page)  # Usamos get_page, no get_pago
+    paged_products = paginator.get_page(page)  # Usamos get_page
     return paged_products
 
-def product_details(request,category_slu,product_slug):
-    product = Product.objects.get(
-        category__slug= category_slug,slug=product_slug)
-    return render(request, 'product_details.html',context={'product':product})
+def products_by_category(request, category_slug):
+    category = get_object_or_404(Category, slug=category_slug)
+    products = Product.objects.filter(category=category, is_available=True)
+    paged_products = pagination(request, products, 3)
+    product_count = products.count()
     
+    return render(request, 'store.html', {
+        'products': paged_products,
+        'product_count': product_count,
+    })
 
-def product_detail(request,category_slug,product_slug):
-    product = Product.objects.get(
-        category_slug= category_slug,slug=product_slug)
-    return render(request, 'product_detail.html',context={'product':product})
-    
+def product_details(request, category_slug, product_slug):
+    product = get_object_or_404(Product, category__slug=category_slug, slug=product_slug)
+    return render(request, 'product_detail.html', {'product': product})
